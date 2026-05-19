@@ -1,0 +1,19 @@
+
+> backend@0.1.0 dev
+> next dev
+
+⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.178.112:3001
+- Environments: .env.local
+✓ Ready in 779ms
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          4812
+- Dir:          C:\Users\Alexa\OneDrive\Dokumente\Claude\Projects\Sports_Nutrition_App\backend
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 4812 /F to stop it.
+[?25h
