@@ -117,6 +117,12 @@ REGELN:
 6. To-Go-Mahlzeiten müssen ohne Herd zubereitet werden können
 7. Alle Mengen für ${user.householdSize} Person(en) angeben
 
+ZUTATEN-FORMAT (kritisch für Einkaufsliste):
+- Immer Rohform verwenden: "Hähnchenbrustfilet" NICHT "gekochte Hähnchenbrust" oder "gebratenes Hähnchen"
+- Einheitliche Namen: dieselbe Zutat immer gleich schreiben (z.B. immer "Hähnchenbrustfilet", nie mal "Hähnchenbrust" mal "Hühnerbrust")
+- Format immer: "MengeEinheit Name" z.B. "200g Hähnchenbrustfilet", "2 Eier", "1 EL Olivenöl"
+- Keine Zubereitungsform im Zutatennamen (kein "gekocht", "gebraten", "gedünstet")
+
 Antworte NUR mit validem JSON, kein Text davor oder danach:
 
 {

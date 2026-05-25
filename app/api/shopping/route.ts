@@ -32,6 +32,34 @@ const CATEGORIES: Record<string, string> = {
   olivenöl: 'Öle & Gewürze', öl: 'Öle & Gewürze', salz: 'Öle & Gewürze', pfeffer: 'Öle & Gewürze',
 }
 
+// Normalisiert Zutatennamen auf Standardform — fasst Varianten zusammen
+const INGREDIENT_ALIASES: [RegExp, string][] = [
+  [/h[äa]hnchen(brust)?filet|h[äa]hnchenbrust|h[üu]hnerbrust|gebraten(e[s]?)?\s+h[äa]hnchen|gekocht(e[s]?)?\s+h[äa]hnchen/i, 'Hähnchenbrustfilet'],
+  [/putenbrust(filet)?|putenfilet/i, 'Putenbrustfilet'],
+  [/rinderhack|hackfleisch.*rind|rind.*hack/i, 'Rinderhackfleisch'],
+  [/lachsfilet|lachs\b/i, 'Lachsfilet'],
+  [/thunfisch(dose)?/i, 'Thunfisch (Dose)'],
+  [/vollkornbrot|vollkorn.*brot/i, 'Vollkornbrot'],
+  [/vollkornnudeln|vollkorn.*nudeln|vollkorn.*pasta/i, 'Vollkornnudeln'],
+  [/basmati.*reis|jasmin.*reis|langkorn.*reis/i, 'Reis'],
+  [/magerquark|quark.*mager/i, 'Magerquark'],
+  [/griechisch.*joghurt|joghurt.*griechisch/i, 'Griechischer Joghurt'],
+  [/olivenöl\b/i, 'Olivenöl'],
+  [/knoblauchzehe[n]?|knoblauch\b/i, 'Knoblauch'],
+  [/kirschtomaten|cocktailtomaten/i, 'Kirschtomaten'],
+  [/süßkartoffel[n]?/i, 'Süßkartoffel'],
+]
+
+function normalizeIngredientName(name: string): string {
+  const trimmed = name.trim()
+  for (const [pattern, standard] of INGREDIENT_ALIASES) {
+    if (pattern.test(trimmed)) return standard
+  }
+  // Zubereitungsform am Anfang entfernen: "gekochte X" → "X", "gebratenes X" → "X"
+  const prepRemoved = trimmed.replace(/^(gekocht[e]?[s]?|gebraten[e]?[s]?|gedünstet[e]?[s]?|gebacken[e]?[s]?|frisch[e]?[s]?)\s+/i, '')
+  return prepRemoved.charAt(0).toUpperCase() + prepRemoved.slice(1)
+}
+
 function categorize(ingredient: string): string {
   const lower = ingredient.toLowerCase()
   for (const [keyword, category] of Object.entries(CATEGORIES)) {
@@ -50,9 +78,10 @@ function parseIngredient(raw: string): { name: string; amount: string; parsedAmo
   if (match) {
     const value = parseFloat(match[1].replace(',', '.'))
     const unit = match[2].toLowerCase()
-    return { name: match[3].trim(), amount: match[0].trim(), parsedAmount: { value, unit } }
+    const name = normalizeIngredientName(match[3].trim())
+    return { name, amount: match[0].trim(), parsedAmount: { value, unit } }
   }
-  return { amount: '', name: raw.trim(), parsedAmount: null }
+  return { amount: '', name: normalizeIngredientName(raw.trim()), parsedAmount: null }
 }
 
 function formatAmounts(amounts: ParsedAmount[], rawAmounts: string[]): string {
