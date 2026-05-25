@@ -13,7 +13,7 @@ interface ShoppingItem {
 const CATEGORY_RULES: [RegExp, string][] = [
   // Spezifische Vorrat-Produkte VOR allgemeinen Gemüse-Regeln prüfen
   [/passierte\s*tomaten|tomatenmark|tomatensauce|tomatenpüree/i, 'Vorrat'],
-  [/knoblauchpulver|zwiebelpulver|paprikapulver|chilipulver|ingwerpulver|korianderpulver/i, 'Vorrat'],
+  [/knoblauchpulver|zwiebelpulver|paprikapulver|chilipulver|ingwerpulver|korianderpulver/i, 'Gewürze & Kräuter'],
 
   [/h[äa]hnchen|h[üu]hnchen|pute|truthahn|rind|hack|steak|schnitzel|lachs|thunfisch|fisch|garnelen|wurst|speck|salami|aufschnitt|schinken|kassler|brustscheibe/i,
     'Fleisch & Fisch'],
@@ -29,8 +29,11 @@ const CATEGORY_RULES: [RegExp, string][] = [
     'Hülsenfrüchte'],
   [/mandel|walnuss|cashew|erdnuss|sonnenblumenkern|kürbiskern|sesam|leinsamen|chiasamen|pinienkern/i,
     'Nüsse & Samen'],
-  // Vorrat: Öle, Saucen, Gewürze, Kräuter, Backzutaten — alles in einer Kategorie
-  [/olivenöl|sonnenblumenöl|rapsöl|sesamöl|kokosöl|\böl\b|kochspray|bratspray|essig|sojasoße|sojasauce|senf|honig|ahornsirup|tomatenmark|brühe|bouillon|backpulver|vanille|kakao|kokosmilch|zitronensaft|limettensaft|worcester|tabasco|sriracha|salz|pfeffer(?!minz)|kurkuma|zimt|oregano|basilikum|thymian|rosmarin|kümmel|muskat|curry|knoblauchpulver|zwiebelpulver|chilipulver|ingwerpulver|kreuzkümmel|kardamom|nelken|lorbeer|petersilie|schnittlauch|dill|minze|salbei|majoran/i,
+  // Gewürze & Kräuter: eigene Kategorie
+  [/\bsalz\b|pfeffer(?!minz)|kurkuma|zimt|oregano|basilikum|thymian|rosmarin|kümmel|muskat|curry|kreuzkümmel|kardamom|nelken|lorbeer|petersilie|schnittlauch|dill|minze|salbei|majoran|paprikapulver|chilipulver|knoblauchpulver|zwiebelpulver|ingwerpulver|korianderpulver/i,
+    'Gewürze & Kräuter'],
+  // Vorrat: Öle, Saucen, Backzutaten
+  [/olivenöl|sonnenblumenöl|rapsöl|sesamöl|kokosöl|\böl\b|kochspray|bratspray|essig|sojasoße|sojasauce|senf|honig|ahornsirup|tomatenmark|brühe|bouillon|backpulver|vanille|kakao|kokosmilch|zitronensaft|limettensaft|worcester|tabasco|sriracha/i,
     'Vorrat'],
 ]
 
@@ -99,7 +102,9 @@ const ALIASES: [RegExp, string][] = [
   [/\bpaprika\b(?!pulver)/i, 'Paprika'],
   [/\bzwiebel[n]?\b(?!pulver)/i, 'Zwiebeln'],
   [/frühlingszwiebel|lauchzwiebel/i, 'Frühlingszwiebeln'],
-  [/\bspinat\b/i, 'Spinat'],
+  [/tiefkühl.*spinat|spinat.*tiefkühl|tk[\s-]?spinat|gefrier.*spinat/i, 'Spinat (TK)'],
+  [/bab[y]?spinat/i, 'Babyspinat'],
+  [/\bspinat\b/i, 'Spinat (frisch)'],
   [/\brucola\b|\brucula\b/i, 'Rucola'],
   [/\bbrokkoli\b/i, 'Brokkoli'],
   [/\bavocado[s]?\b/i, 'Avocado'],
@@ -158,6 +163,9 @@ function normalize(raw: string): string {
   // 7. Rein beschreibende Klammern entfernen: "(schwarz)", "(weiß)", "(grob)" etc.
   s = s.replace(/\s*\((schwarz|weiß|rot|grün|gelb|hell|dunkel|grob|fein|frisch|ganz|gemahlen|geröstet|roh|natur|bio)\)/gi, '').trim()
 
+  // 8. Verwaiste Klammern entfernen: "Basilikum)" → "Basilikum"
+  s = s.replace(/\s*\)\s*$/, '').replace(/^\s*\(\s*/, '').trim()
+
   if (!s) return ''
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
@@ -197,6 +205,13 @@ const PIECE_TO_G: Record<string, number> = {
 
 // EL/TL Gewichte in Gramm
 const SPOON_G: Record<string, number> = { el: 12, tl: 4 }
+
+// Blattgemüse/Kräuter werden als Bund verkauft, nicht als Stück
+const BUND_ITEMS = new Set([
+  'rucola', 'rucula', 'spinatfrisch', 'babyspinat', 'petersilie',
+  'schnittlauch', 'dill', 'basilikum', 'koriander', 'minze',
+  'thymian', 'rosmarin', 'salbei', 'feldsalat', 'mangold',
+])
 
 interface Amount { value: number; unit: string }
 
@@ -264,13 +279,16 @@ function parseOne(raw: string): { name: string; amount: Amount | null } {
     return { name, amount: { value: val, unit } }
   }
 
-  // Nur Zahl: "2 Eier", "1 Avocado"
+  // Nur Zahl: "2 Eier", "1 Avocado", "1 Rucola"
   const c = s.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/)
   if (c) {
     const val = parseFloat(c[1].replace(',', '.'))
     const name = normalize(c[2].trim())
     if (!name) return { name: '', amount: null }
-    return { name, amount: { value: val, unit: 'stück' } }
+    // Blattgemüse/Kräuter: werden als Bund verkauft
+    const nameKey = name.toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-zäöüß]/g, '')
+    const unit = BUND_ITEMS.has(nameKey) ? 'bund' : 'stück'
+    return { name, amount: { value: val, unit } }
   }
 
   // Kein Maß
@@ -374,8 +392,9 @@ export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
       'Getreide & Kohlenhydrate',
       'Hülsenfrüchte',
       'Nüsse & Samen',
-      'Sonstiges',
+      'Gewürze & Kräuter',
       'Vorrat',
+      'Sonstiges',
     ]
     const sorted: Record<string, ShoppingItem[]> = {}
     for (const cat of order) {
