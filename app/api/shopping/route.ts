@@ -54,22 +54,58 @@ const INGREDIENT_ALIASES: [RegExp, string][] = [
   [/rinderhack|hackfleisch.*rind|rind.*hack|hackfleisch/i, 'Rinderhackfleisch'],
   [/lachsfilet|lachs\b/i, 'Lachsfilet'],
   [/thunfisch(dose)?/i, 'Thunfisch (Dose)'],
-  [/vollkornbrot|vollkorn.*brot/i, 'Vollkornbrot'],
+  // Brot & Toast
+  [/vollkorn.*toast|toast.*vollkorn|toastbrot.*vollkorn/i, 'Vollkorntoast'],
+  [/\btoast(brot)?\b/i, 'Toastbrot'],
+  [/vollkornbrot|vollkorn.*brot|brot.*vollkorn/i, 'Vollkornbrot'],
+  [/vollkorn.*brötchen|brötchen.*vollkorn/i, 'Vollkornbrötchen'],
+  // Nudeln & Reis
   [/vollkornnudeln|vollkorn.*nudeln|vollkorn.*pasta/i, 'Vollkornnudeln'],
+  [/\bnudeln?\b|\bpasta\b/i, 'Nudeln'],
   [/basmati.*reis|jasmin.*reis|langkorn.*reis|vollkorn.*reis/i, 'Reis'],
   [/\breis\b/i, 'Reis'],
+  // Haferflocken
+  [/haferflocken|hafer\b/i, 'Haferflocken'],
+  // Kartoffeln
+  [/süßkartoffel[n]?/i, 'Süßkartoffeln'],
+  [/kartoffel[n]?/i, 'Kartoffeln'],
+  // Milchprodukte
   [/magerquark|quark.*mager/i, 'Magerquark'],
-  [/griechisch.*joghurt|joghurt.*griechisch/i, 'Griechischer Joghurt (0%/2%)'],
+  [/\bquark\b/i, 'Quark'],
+  [/griechisch.*joghurt|joghurt.*griechisch/i, 'Griechischer Joghurt'],
   [/\bjoghurt\b/i, 'Joghurt'],
+  [/\bmilch\b/i, 'Milch'],
+  [/\beier?\b|hühnereier/i, 'Eier'],
+  // Öle
   [/olivenöl\b/i, 'Olivenöl'],
+  [/sonnenblumenöl/i, 'Sonnenblumenöl'],
+  [/rapsöl/i, 'Rapsöl'],
+  // Gemüse
   [/knoblauchzehe[n]?/i, 'Knoblauch'],
   [/kirschtomaten|cocktailtomaten/i, 'Kirschtomaten'],
   [/\btomate[n]?\b/i, 'Tomaten'],
-  [/süßkartoffel[n]?/i, 'Süßkartoffel'],
-  [/\beier?\b|hühnereier/i, 'Eier'],
-  [/rote?\s+paprika|paprikaschote/i, 'Paprika (rot)'],
-  [/gelbe?\s+paprika/i, 'Paprika (gelb)'],
-  [/\bpaprika\b(?!\s*pulver|\s*gewürz)/i, 'Paprika'],
+  [/rote?\s+paprika|paprika.*rot/i, 'Paprika (rot)'],
+  [/gelbe?\s+paprika|paprika.*gelb/i, 'Paprika (gelb)'],
+  [/\bpaprika\b(?!\s*(pulver|gewürz|scharf|edelsüß))/i, 'Paprika'],
+  [/\bzwiebel[n]?\b/i, 'Zwiebeln'],
+  [/frühlingszwiebel[n]?|lauchzwiebel[n]?/i, 'Frühlingszwiebeln'],
+  [/\bspinat\b/i, 'Spinat'],
+  [/\bbrokkoli\b/i, 'Brokkoli'],
+  [/\bavocado[s]?\b/i, 'Avocado'],
+  [/\bgurke[n]?\b/i, 'Gurke'],
+  [/\bzucchini\b/i, 'Zucchini'],
+  // Obst
+  [/\bbanane[n]?\b/i, 'Bananen'],
+  [/\bapfel\b|äpfel/i, 'Äpfel'],
+  [/heidelbeere[n]?|blaubeere[n]?/i, 'Heidelbeeren'],
+  [/erdbeere[n]?/i, 'Erdbeeren'],
+  [/himbeere[n]?/i, 'Himbeeren'],
+  [/gemischte?\s+beere[n]?|beere[n]?/i, 'Beeren (gemischt)'],
+  // Nüsse
+  [/mandel[n]?/i, 'Mandeln'],
+  [/walnuss|walnüsse/i, 'Walnüsse'],
+  [/cashew[s]?/i, 'Cashewkerne'],
+  [/erdnuss|erdnüsse/i, 'Erdnüsse'],
 ]
 
 function normalizeIngredientName(name: string): string {
@@ -200,8 +236,8 @@ export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
       'Getreide & Kohlenhydrate',
       'Hülsenfrüchte',
       'Nüsse & Samen',
-      'Vorrat',
       'Sonstiges',
+      'Vorrat',  // ganz unten — meist schon zuhause vorhanden
     ]
     const sorted: Record<string, ShoppingItem[]> = {}
     for (const cat of categoryOrder) {
