@@ -117,11 +117,15 @@ REGELN:
 6. To-Go-Mahlzeiten müssen ohne Herd zubereitet werden können
 7. Alle Mengen für ${user.householdSize} Person(en) angeben
 
-ZUTATEN-FORMAT (kritisch für Einkaufsliste):
-- Immer Rohform verwenden: "Hähnchenbrustfilet" NICHT "gekochte Hähnchenbrust" oder "gebratenes Hähnchen"
-- Einheitliche Namen: dieselbe Zutat immer gleich schreiben (z.B. immer "Hähnchenbrustfilet", nie mal "Hähnchenbrust" mal "Hühnerbrust")
-- Format immer: "MengeEinheit Name" z.B. "200g Hähnchenbrustfilet", "2 Eier", "1 EL Olivenöl"
-- Keine Zubereitungsform im Zutatennamen (kein "gekocht", "gebraten", "gedünstet")
+ZUTATEN-FORMAT — STRIKT EINHALTEN:
+- Jede Zutat als EIGENER Eintrag im Array — NIEMALS mehrere Zutaten in einem String: FALSCH: "Salz, Pfeffer, Öl" — RICHTIG: ["Salz", "Pfeffer", "1 EL Olivenöl"]
+- Format: "MengeEinheit Name" — Einheiten: g, kg, ml, l, EL, TL, Stück, Scheibe, Bund, Dose, Pck
+- Fleisch/Fisch/Getreide/Milch immer in g: "200g Hähnchenbrustfilet", "100g Haferflocken"
+- Obst/Gemüse zählbar in Stück: "1 Avocado", "2 Tomaten", "1 Paprika"
+- Immer Rohform: "Hähnchenbrustfilet" NICHT "gebratenes Hähnchen"
+- Einheitliche Namen: immer gleich schreiben — "Hähnchenbrustfilet" nie "Hähnchenbrust" oder "Hühnerbrust"
+- Gewürze die JEDER zuhause hat (Salz, Pfeffer, Öl) dürfen weggelassen werden oder nur einmal pro Woche auflisten
+- KEIN "nach Geschmack", KEIN "nach Belieben", KEIN "optional" in Zutaten
 
 Antworte NUR mit validem JSON, kein Text davor oder danach:
 

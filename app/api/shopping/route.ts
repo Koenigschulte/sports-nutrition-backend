@@ -8,68 +8,47 @@ interface ShoppingItem {
   category: string
 }
 
-// Kategorisierung
-const CATEGORIES: [RegExp, string][] = [
-  [/h[äa]hnchen|h[üu]hnchen|h[üu]hn\b|pute[n]?|rind(er)?|hack|steak|schnitzel|lachs|thunfisch|fisch|garnelen|salami|wurst|speck/i, 'Fleisch & Fisch'],
-  [/\beier?\b|milch|joghurt|quark|käse|mozzarella|butter|sahne|frischkäse|skyr|hüttenkäse/i, 'Milch & Eier'],
-  [/tomate|spinat|brokkoli|karotte|möhre|zwiebel|knoblauch(?!pulver)|zucchini|gurke|avocado|süßkartoffel|feldsalat|rucola|blumenkohl|lauch|sellerie|fenchel|erbsen|mais|\bpaprika\b(?!pulver)|champignon|pilz/i, 'Gemüse'],
-  [/banane|apfel|äpfel|beere|orange|zitrone|mango|traube|erdbeere|heidelbeere|himbeere|kiwi|ananas|obst|frucht|früchte/i, 'Obst'],
-  [/reis|nudel|pasta|toast|brot|hafer|quinoa|kartoffel|couscous|bulgur|dinkel|tortilla|wrap|bagel/i, 'Getreide & Kohlenhydrate'],
+// ─── Kategorien ──────────────────────────────────────────────────────────────
+const CATEGORY_RULES: [RegExp, string][] = [
+  [/h[äa]hnchen|h[üu]hnchen|pute|rind|hack|steak|schnitzel|lachs|thunfisch|fisch|garnelen|wurst|speck/i, 'Fleisch & Fisch'],
+  [/\beier?\b|milch|joghurt|quark|käse|mozzarella|butter|sahne|frischkäse|skyr/i, 'Milch & Eier'],
+  [/tomate|spinat|brokkoli|karotte|möhre|zwiebel|knoblauch(?!pulver)|zucchini|gurke|avocado|süßkartoffel|rucola|blumenkohl|lauch|fenchel|erbsen|mais|champignon|pilz|paprika(?!pulver)|salat(?!soße)/i, 'Gemüse'],
+  [/banane|apfel|beere|orange|zitrone|mango|traube|erdbeere|heidelbeere|himbeere|kiwi|ananas|früchte|obst/i, 'Obst'],
+  [/reis|nudel|pasta|toast|brot|hafer|quinoa|kartoffel|couscous|bulgur|dinkel|tortilla|wrap/i, 'Getreide & Kohlenhydrate'],
   [/linsen|bohnen|kichererbsen|tofu|tempeh|edamame/i, 'Hülsenfrüchte'],
-  [/mandel|walnuss|cashew|erdnuss|sonnenblumenkern|kürbiskern|sesam|leinsamen|chiasamen|nuss|nüsse/i, 'Nüsse & Samen'],
-  // Vorrat: alles was man meist zuhause hat
-  [/salz|pfeffer|paprikapulver|kurkuma|zimt|oregano|basilikum|thymian|rosmarin|kümmel|muskat|curry|knoblauchpulver|zwiebelpulver|chilipulver|chili(?!schote)|gewürz|olivenöl|sonnenblumenöl|rapsöl|\böl\b|essig|sojasoße|senf|honig|ahornsirup|tomatenmark|brühe|bouillon|backpulver|vanille|kakao|mehl(?!gericht)/i, 'Vorrat'],
+  [/mandel|walnuss|cashew|erdnuss|sonnenblumenkern|kürbiskern|sesam|leinsamen|chiasamen/i, 'Nüsse & Samen'],
+  [/salz|pfeffer|paprikapulver|kurkuma|zimt|oregano|basilikum|thymian|rosmarin|kümmel|muskat|curry|knoblauchpulver|zwiebelpulver|chilipulver|gewürz|olivenöl|sonnenblumenöl|rapsöl|\böl\b|essig|sojasoße|senf|honig|ahornsirup|tomatenmark|brühe|bouillon|backpulver|vanille|kakao/i, 'Vorrat'],
 ]
 
 function categorize(name: string): string {
-  for (const [pattern, category] of CATEGORIES) {
-    if (pattern.test(name)) return category
+  const lower = name.toLowerCase()
+  for (const [re, cat] of CATEGORY_RULES) {
+    if (re.test(lower)) return cat
   }
   return 'Sonstiges'
 }
 
-// Durchschnittsgewichte für "X Stück" → Gramm-Umrechnung (für Obst/Gemüse)
-const PIECE_WEIGHTS_G: Record<string, number> = {
-  'banane': 120, 'bananen': 120,
-  'apfel': 150, 'äpfel': 150,
-  'orange': 180,
-  'zitrone': 100,
-  'kiwi': 90,
-  'avocado': 200,
-  'ei': 60, 'eier': 60,
-  'tomate': 100, 'tomaten': 100,
-  'paprika': 160,
-  'gurke': 400,
-  'zwiebel': 100, 'zwiebeln': 100,
-}
-
-// EL/TL in Gramm für Nüsse/Samen/Flüssiges
-const SPOON_WEIGHTS_G: Record<string, number> = {
-  'el': 10, 'tl': 5,
-}
-
-// Aliase: verschiedene Schreibweisen → Standardname
-const INGREDIENT_ALIASES: [RegExp, string][] = [
+// ─── Normalisierung ───────────────────────────────────────────────────────────
+const ALIASES: [RegExp, string][] = [
   // Fleisch
-  [/h[äa]hnchen(brust)?filet|h[äa]hnchenbrust|h[üu]hnerbrust|gebraten(e[s]?)?\s+h[äa]hnchen|gekocht(e[s]?)?\s+h[äa]hnchen|h[äa]hnchen\b/i, 'Hähnchenbrustfilet'],
+  [/h[äa]hnchen(brust)?filet|h[äa]hnchenbrust|h[üu]hnerbrust|h[äa]hnchen\b/i, 'Hähnchenbrustfilet'],
   [/putenbrust(filet)?|putenfilet|pute\b/i, 'Putenbrustfilet'],
   [/rinderhack|hackfleisch/i, 'Rinderhackfleisch'],
   [/lachsfilet|lachs\b/i, 'Lachsfilet'],
   [/thunfisch/i, 'Thunfisch (Dose)'],
-  // Brot
+  // Brot & Getreide
   [/vollkorn.*toast|toast.*vollkorn/i, 'Vollkorntoast'],
   [/\btoast(brot)?\b/i, 'Toastbrot'],
   [/vollkornbrot|vollkorn.*brot/i, 'Vollkornbrot'],
-  // Getreide
   [/vollkornnudeln|vollkorn.*nudeln|vollkorn.*pasta/i, 'Vollkornnudeln'],
   [/\bnudeln?\b|\bpasta\b/i, 'Nudeln'],
-  [/basmati|jasmin.*reis|langkorn.*reis|vollkorn.*reis/i, 'Reis'],
+  [/basmati|jasmin.*reis|langkorn.*reis/i, 'Reis'],
   [/\breis\b/i, 'Reis'],
   [/haferflocken|hafer\b/i, 'Haferflocken'],
-  [/süßkartoffel/i, 'Süßkartoffeln'],
-  [/kartoffel/i, 'Kartoffeln'],
   [/couscous/i, 'Couscous'],
   [/quinoa/i, 'Quinoa'],
+  [/süßkartoffel/i, 'Süßkartoffel'],
+  [/kartoffel/i, 'Kartoffel'],
   // Milch
   [/magerquark|quark.*mager/i, 'Magerquark'],
   [/\bquark\b/i, 'Quark'],
@@ -78,36 +57,35 @@ const INGREDIENT_ALIASES: [RegExp, string][] = [
   [/\beier?\b|hühnerei/i, 'Eier'],
   // Öle & Vorrat
   [/olivenöl/i, 'Olivenöl'],
-  [/sonnenblumenöl/i, 'Sonnenblumenöl'],
-  [/tomatenmark/i, 'Tomatenmark'],
   [/sojasoße|sojasauce/i, 'Sojasoße'],
+  [/tomatenmark/i, 'Tomatenmark'],
+  [/gemüsebrühe|hühnerbrühe|rinderbrühe|brühe\b/i, 'Gemüsebrühe'],
   // Gemüse
-  [/knoblauchzehe[n]?/i, 'Knoblauch'],
-  [/\bknoblauch\b/i, 'Knoblauch'],
+  [/knoblauchzehe[n]?|knoblauch(?!pulver)/i, 'Knoblauch'],
   [/kirschtomaten|cocktailtomaten/i, 'Kirschtomaten'],
   [/\btomate[n]?\b/i, 'Tomaten'],
-  [/rote?\s+paprika|paprika.*rot/i, 'Paprika (rot)'],
-  [/gelbe?\s+paprika|paprika.*gelb/i, 'Paprika (gelb)'],
-  [/grüne?\s+paprika|paprika.*grün/i, 'Paprika (grün)'],
-  [/\bpaprika\b(?!\s*(pulver|gewürz|scharf|edelsüß))/i, 'Paprika'],
+  [/rote?\s*paprika(?!pulver)/i, 'Paprika (rot)'],
+  [/gelbe?\s*paprika/i, 'Paprika (gelb)'],
+  [/grüne?\s*paprika/i, 'Paprika (grün)'],
+  [/\bpaprika\b(?!pulver)/i, 'Paprika'],
   [/\bzwiebel[n]?\b/i, 'Zwiebeln'],
   [/frühlingszwiebel|lauchzwiebel/i, 'Frühlingszwiebeln'],
   [/\bspinat\b/i, 'Spinat'],
-  [/\brucola\b|rucola/i, 'Rucola'],
+  [/\brucola\b/i, 'Rucola'],
   [/\bbrokkoli\b/i, 'Brokkoli'],
   [/\bavocado[s]?\b/i, 'Avocado'],
   [/\bgurke[n]?\b/i, 'Gurke'],
   [/\bzucchini\b/i, 'Zucchini'],
-  [/champignon[s]?|pilze?/i, 'Champignons'],
-  // Obst — IMMER in Stück
+  [/champignon[s]?/i, 'Champignons'],
+  // Obst
   [/\bbanane[n]?\b/i, 'Banane'],
   [/\bapfel\b|äpfel/i, 'Apfel'],
   [/heidelbeere[n]?|blaubeere[n]?/i, 'Heidelbeeren'],
   [/erdbeere[n]?/i, 'Erdbeeren'],
   [/himbeere[n]?/i, 'Himbeeren'],
-  [/gemischte?\s*beere[n]?|beere[n]? gemischt/i, 'Beeren (gemischt)'],
+  [/gemischte?\s*beere[n]?/i, 'Beeren (gemischt)'],
   [/\bbeere[n]?\b/i, 'Beeren'],
-  [/gemischte?\s*(früchte?|obst)|früchte?.*gemischt/i, 'Gemischte Früchte'],
+  [/gemischte?\s*(früchte?|obst)/i, 'Gemischte Früchte'],
   [/\bkiwi[s]?\b/i, 'Kiwi'],
   [/\btraube[n]?\b/i, 'Trauben'],
   [/\bmango[s]?\b/i, 'Mango'],
@@ -115,122 +93,126 @@ const INGREDIENT_ALIASES: [RegExp, string][] = [
   [/mandel[n]?/i, 'Mandeln'],
   [/walnuss|walnüsse/i, 'Walnüsse'],
   [/cashew/i, 'Cashewkerne'],
-  [/erdnuss|erdnüsse/i, 'Erdnüsse'],
   [/sonnenblumenkern/i, 'Sonnenblumenkerne'],
   [/kürbiskern/i, 'Kürbiskerne'],
-  [/\bsesam\b/i, 'Sesam'],
-  [/leinsamen/i, 'Leinsamen'],
   [/chiasamen/i, 'Chiasamen'],
+  [/leinsamen/i, 'Leinsamen'],
+  [/\bsesam\b/i, 'Sesam'],
 ]
 
-function normalizeIngredientName(name: string): string {
-  const trimmed = name
+function normalize(raw: string): string {
+  // Qualifier entfernen
+  let s = raw
+    .replace(/\s*(nach geschmack|nach belieben|zum abschmecken|optional|nach bedarf|zum würzen|frisch gemahlen|frisch gepresst)\b/gi, '')
+    .replace(/\(\s*\)/g, '')   // leere Klammern "()"
+    .replace(/\s+/g, ' ')
     .trim()
-    .replace(/\s*(nach geschmack|nach belieben|zum abschmecken|optional|nach bedarf|zum würzen)\s*/gi, '')
-    .trim()
-  for (const [pattern, standard] of INGREDIENT_ALIASES) {
-    if (pattern.test(trimmed)) return standard
+  // Zubereitungsform am Anfang
+  s = s.replace(/^(gekoch|gebraten|gedünstet|gebacken|frisch|gehackt|gerieben|gewürfelt|roh)[a-z]*\s+/i, '')
+  // Alias-Lookup
+  for (const [re, std] of ALIASES) {
+    if (re.test(s)) return std
   }
-  const prepRemoved = trimmed.replace(/^(gekocht[e]?[s]?|gebraten[e]?[s]?|gedünstet[e]?[s]?|gebacken[e]?[s]?|frisch[e]?[s]?|gehackt[e]?[s]?|gerieben[e]?[s]?|gewürfelt[e]?[s]?)\s+/i, '')
-  const result = prepRemoved.charAt(0).toUpperCase() + prepRemoved.slice(1)
-  return result
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-// Bruchzahlen + Adjektive bereinigen
-function preprocessRaw(raw: string): string {
-  return raw
+// ─── Split "Salz, Pfeffer" und "Salz und Pfeffer" ────────────────────────────
+function splitIngredients(raw: string): string[] {
+  const s = raw.trim()
+  // Hat eine Zahl/Menge am Anfang → einzelne Zutat, kein Split
+  if (/^\d/.test(s) || /^(ein|eine|zwei|drei)\b/i.test(s)) return [s]
+  // Kein Komma, kein " und " → einzeln
+  if (!s.includes(',') && !/\s+und\s+/i.test(s)) return [s]
+  // Split by comma oder " und "
+  return s.split(/,|\s+und\s+/i)
+    .map(p => p.trim())
+    .filter(p => p.length > 1)
+}
+
+// ─── Durchschnittsgewichte für Stück→Gramm (Obst/Gemüse) ─────────────────────
+const PIECE_TO_G: Record<string, number> = {
+  banane: 120, apfel: 150, orange: 180, zitrone: 100, kiwi: 90,
+  avocado: 200, tomate: 100, tomaten: 100, paprika: 160, gurke: 400,
+  zwiebel: 100, zwiebeln: 100, zucchini: 300,
+}
+
+// EL/TL Gewichte (g) für Vorrat & Nüsse
+const SPOON_G: Record<string, number> = { el: 12, tl: 4 }
+
+interface Amount { value: number; unit: string }
+
+function parseOne(raw: string): { name: string; amount: Amount | null } {
+  // Bruchzeichen
+  let s = raw
     .replace(/½/g, '0.5').replace(/¼/g, '0.25').replace(/¾/g, '0.75')
     .replace(/⅓/g, '0.33').replace(/⅔/g, '0.67')
-    .replace(/^(\d+(?:[.,]\d+)?)\s+(große?[s]?|kleine?[s]?|frische?[s]?|reife?[s]?|gehackte?[s]?|geriebene?[s]?|gewürfelte?[s]?)\s+/i, '$1 ')
-}
+  // "2 große X" → "2 X"
+  s = s.replace(/^(\d+(?:[.,]\d+)?)\s+(große?[s]?|kleine?[s]?|frische?[s]?|reife?[s]?)\s+/i, '$1 ')
 
-// Komma-getrennte Zutaten splitten: "Salz, Pfeffer, Knoblauchpulver" → 3 Items
-function splitIngredientString(raw: string): string[] {
-  const trimmed = raw.trim()
-  // Hat eine Zahl am Anfang → einzelne Zutat (z.B. "200g Hähnchen, gewürfelt")
-  if (/^\d/.test(trimmed)) return [trimmed]
-  // Enthält Komma → als Liste behandeln
-  if (trimmed.includes(',')) {
-    return trimmed.split(',').map(s => s.trim()).filter(s => s.length > 1)
-  }
-  return [trimmed]
-}
-
-interface ParsedAmount {
-  value: number
-  unit: string
-}
-
-function parseIngredient(raw: string): { name: string; parsedAmount: ParsedAmount | null } {
-  const cleaned = preprocessRaw(raw)
-
-  // Mit Einheit: "200g Hähnchen", "2 EL Olivenöl"
-  const match = cleaned.match(/^(\d+(?:[.,]\d+)?)\s*(g|kg|ml|l|EL|TL|Stück|Pck\.?|Dose[n]?|Tasse[n]?|Bund|Scheibe[n]?|Zehe[n]?|Portion[en]?)\.?\s+(.+)$/i)
-  if (match) {
-    let value = parseFloat(match[1].replace(',', '.'))
-    let unit = match[2].replace(/\.$/,'').toLowerCase()
-    const name = normalizeIngredientName(match[3].trim())
-
-    // EL/TL für Nüsse/Samen → Gramm umrechnen (besser summierbar)
+  // Mit Einheit
+  const m = s.match(/^(\d+(?:[.,]\d+)?)\s*(g|kg|ml|l|EL|TL|Stück|Pck\.?|Dose[n]?|Tasse[n]?|Bund|Scheibe[n]?|Zehe[n]?|Portion[en]?)\.?\s+(.+)$/i)
+  if (m) {
+    let val = parseFloat(m[1].replace(',', '.'))
+    let unit = m[2].replace(/\.$/, '').toLowerCase()
+    const name = normalize(m[3].trim())
     const cat = categorize(name)
+    const nameKey = name.toLowerCase().replace(/\(.*\)/g, '').trim()
+    // EL/TL → g für Nüsse/Samen/Vorrat
     if ((unit === 'el' || unit === 'tl') && (cat === 'Nüsse & Samen' || cat === 'Vorrat')) {
-      value = value * (SPOON_WEIGHTS_G[unit] ?? 10)
+      val = val * SPOON_G[unit]
       unit = 'g'
     }
-
-    // Obst in Gramm → in Stück umrechnen
-    const nameKey = name.toLowerCase()
-    if (unit === 'g' && PIECE_WEIGHTS_G[nameKey]) {
-      value = Math.round(value / PIECE_WEIGHTS_G[nameKey])
+    // g/kg → Stück für zählbares Obst/Gemüse
+    if ((unit === 'g' || unit === 'kg') && PIECE_TO_G[nameKey]) {
+      const grams = unit === 'kg' ? val * 1000 : val
+      val = Math.max(1, Math.round(grams / PIECE_TO_G[nameKey]))
       unit = 'stück'
     }
-
-    return { name, parsedAmount: { value, unit } }
+    return { name, amount: { value: val, unit } }
   }
 
-  // Nur Zahl: "2 Eier", "1 Banane"
-  const countMatch = cleaned.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/)
-  if (countMatch) {
-    const value = parseFloat(countMatch[1].replace(',', '.'))
-    const name = normalizeIngredientName(countMatch[2].trim())
-    return { name, parsedAmount: { value, unit: 'stück' } }
+  // Nur Zahl: "2 Eier", "1 Avocado"
+  const c = s.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/)
+  if (c) {
+    const val = parseFloat(c[1].replace(',', '.'))
+    const name = normalize(c[2].trim())
+    return { name, amount: { value: val, unit: 'stück' } }
   }
 
-  // Kein Maß: "Salz", "Pfeffer"
-  const name = normalizeIngredientName(cleaned.trim())
-  return { name, parsedAmount: null }
+  // Kein Maß
+  const name = normalize(s.trim())
+  return { name, amount: null }
 }
 
-function formatAmounts(amounts: ParsedAmount[], hasNoAmount: boolean): string {
-  const normalized = amounts.map(a => {
-    if (a.unit === 'kg') return { value: a.value * 1000, unit: 'g' }
-    if (a.unit === 'l') return { value: a.value * 1000, unit: 'ml' }
-    return a
-  })
+function formatAmount(amounts: Amount[], hasNoAmount: boolean): string {
+  if (amounts.length === 0) return hasNoAmount ? 'nach Bedarf' : ''
 
-  // Pro Einheit zusammenzählen
+  // Normalisieren: kg→g, l→ml
+  const norm = amounts.map(a =>
+    a.unit === 'kg' ? { value: a.value * 1000, unit: 'g' } :
+    a.unit === 'l'  ? { value: a.value * 1000, unit: 'ml' } : a
+  )
+
+  // Pro Einheit summieren
   const byUnit: Record<string, number> = {}
-  for (const a of normalized) {
-    byUnit[a.unit] = (byUnit[a.unit] || 0) + a.value
-  }
+  for (const a of norm) byUnit[a.unit] = (byUnit[a.unit] || 0) + a.value
 
-  const parts = Object.entries(byUnit).map(([unit, total]) => {
-    if (unit === 'g' && total >= 1000) return `${+(total / 1000).toFixed(1)} kg`
-    if (unit === 'ml' && total >= 1000) return `${+(total / 1000).toFixed(1)} l`
-    if (unit === 'stück') return `${Math.round(total)} Stück`
-    if (unit === 'scheibe' || unit === 'scheiben') return `${Math.round(total)} Scheiben`
-    if (unit === 'el') return `${Math.round(total)} EL`
-    if (unit === 'tl') return `${Math.round(total)} TL`
-    if (unit === 'dose' || unit === 'dosen') return `${Math.round(total)} Dose(n)`
-    if (unit === 'bund') return `${Math.round(total)} Bund`
-    if (unit === 'pck' || unit === 'pck.') return `${Math.round(total)} Pck.`
-    return `${Math.round(total)} ${unit}`
-  })
-
-  if (hasNoAmount && parts.length === 0) return 'nach Bedarf'
-  return parts.join(' + ')
+  return Object.entries(byUnit).map(([unit, total]) => {
+    const t = Math.round(total * 10) / 10
+    if (unit === 'g')       return t >= 1000 ? `${+(t/1000).toFixed(1)} kg` : `${Math.round(t)} g`
+    if (unit === 'ml')      return t >= 1000 ? `${+(t/1000).toFixed(1)} l`  : `${Math.round(t)} ml`
+    if (unit === 'stück')   return `${Math.round(t)}×`
+    if (unit === 'scheibe' || unit === 'scheiben') return `${Math.round(t)} Scheiben`
+    if (unit === 'dose' || unit === 'dosen')       return `${Math.round(t)} Dose(n)`
+    if (unit === 'bund')    return `${Math.round(t)} Bund`
+    if (unit === 'pck' || unit === 'pck.') return `${Math.round(t)} Pck.`
+    if (unit === 'el')      return `${Math.round(t)} EL`
+    if (unit === 'tl')      return `${Math.round(t)} TL`
+    return `${Math.round(t)} ${unit}`
+  }).join(' + ')
 }
 
+// ─── Handler ──────────────────────────────────────────────────────────────────
 export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
   const client = await pool.connect()
   try {
@@ -247,58 +229,49 @@ export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
       [planId]
     )
 
-    // Alle Zutaten sammeln — mit Komma-Split
-    const accum: Record<string, { name: string; category: string; amounts: ParsedAmount[]; hasNoAmount: boolean }> = {}
+    // Akkumulieren
+    const accum: Record<string, { name: string; cat: string; amounts: Amount[]; hasNoAmount: boolean }> = {}
 
     for (const meal of mealsRes.rows) {
-      const recipe = meal.recipe_data as { ingredients?: string[] }
-      if (!recipe?.ingredients) continue
-
-      for (const rawIng of recipe.ingredients) {
-        const parts = splitIngredientString(rawIng)
-        for (const part of parts) {
+      const ings: string[] = (meal.recipe_data as { ingredients?: string[] })?.ingredients ?? []
+      for (const raw of ings) {
+        for (const part of splitIngredients(raw)) {
           if (!part || part.length < 2) continue
-          const { name, parsedAmount } = parseIngredient(part)
+          const { name, amount } = parseOne(part)
           if (!name || name.length < 2) continue
-
-          const key = name.toLowerCase().trim()
-          if (!accum[key]) {
-            accum[key] = { name, category: categorize(name), amounts: [], hasNoAmount: false }
-          }
-          if (parsedAmount) {
-            accum[key].amounts.push(parsedAmount)
-          } else {
-            accum[key].hasNoAmount = true
-          }
+          const key = name.toLowerCase().replace(/[^a-zäöü]/g, '')
+          if (!accum[key]) accum[key] = { name, cat: categorize(name), amounts: [], hasNoAmount: false }
+          if (amount) accum[key].amounts.push(amount)
+          else accum[key].hasNoAmount = true
         }
       }
     }
 
-    // Konsolidiert
+    // Gruppieren
     const byCategory: Record<string, ShoppingItem[]> = {}
     for (const acc of Object.values(accum)) {
       const item: ShoppingItem = {
         name: acc.name,
-        amount: formatAmounts(acc.amounts, acc.hasNoAmount),
-        category: acc.category,
+        amount: formatAmount(acc.amounts, acc.hasNoAmount),
+        category: acc.cat,
       }
       if (!byCategory[item.category]) byCategory[item.category] = []
       byCategory[item.category].push(item)
     }
 
-    // Reihenfolge — Vorrat ganz unten
-    const categoryOrder = [
+    const order = [
       'Fleisch & Fisch', 'Milch & Eier', 'Gemüse', 'Obst',
       'Getreide & Kohlenhydrate', 'Hülsenfrüchte', 'Nüsse & Samen',
       'Sonstiges', 'Vorrat',
     ]
     const sorted: Record<string, ShoppingItem[]> = {}
-    for (const cat of categoryOrder) {
+    for (const cat of order) {
       if (byCategory[cat]) sorted[cat] = byCategory[cat].sort((a, b) => a.name.localeCompare(b.name))
     }
 
     return NextResponse.json({
-      planId, weekStart: planRes.rows[0].week_start,
+      planId,
+      weekStart: planRes.rows[0].week_start,
       categories: sorted,
       totalItems: Object.values(accum).length,
     })
