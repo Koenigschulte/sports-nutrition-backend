@@ -38,19 +38,38 @@ export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
     // Forecast IMMER frisch berechnen — zeigt aktuelle Strava-Aktivitäten dieser Woche
     const freshForecast = await buildWeekForecast(userId)
 
-    const mealsRes = await client.query(
-      `SELECT id, TO_CHAR(meal_date, 'YYYY-MM-DD') as meal_date, meal_type,
-              recipe_data, serving_size, is_togo, skipped, is_eaten, eaten_at,
-              jsonb_array_length(COALESCE(alternatives, '[]'::jsonb)) as alternatives_count
-       FROM plan_meals
-       WHERE plan_id = $1
-       ORDER BY meal_date, CASE meal_type
-         WHEN 'breakfast' THEN 1
-         WHEN 'lunch' THEN 2
-         WHEN 'dinner' THEN 3
-         ELSE 4 END`,
-      [plan.id]
-    )
+    // alternatives-Spalte könnte bei älteren DBs fehlen → Fallback ohne alternatives_count
+    let mealsRes
+    try {
+      mealsRes = await client.query(
+        `SELECT id, TO_CHAR(meal_date, 'YYYY-MM-DD') as meal_date, meal_type,
+                recipe_data, serving_size, is_togo, skipped, is_eaten, eaten_at,
+                jsonb_array_length(COALESCE(alternatives, '[]'::jsonb)) as alternatives_count
+         FROM plan_meals
+         WHERE plan_id = $1
+         ORDER BY meal_date, CASE meal_type
+           WHEN 'breakfast' THEN 1
+           WHEN 'lunch' THEN 2
+           WHEN 'dinner' THEN 3
+           ELSE 4 END`,
+        [plan.id]
+      )
+    } catch {
+      // alternatives-Spalte existiert noch nicht → ohne alternatives_count abfragen
+      mealsRes = await client.query(
+        `SELECT id, TO_CHAR(meal_date, 'YYYY-MM-DD') as meal_date, meal_type,
+                recipe_data, serving_size, is_togo, skipped, is_eaten, eaten_at,
+                0 as alternatives_count
+         FROM plan_meals
+         WHERE plan_id = $1
+         ORDER BY meal_date, CASE meal_type
+           WHEN 'breakfast' THEN 1
+           WHEN 'lunch' THEN 2
+           WHEN 'dinner' THEN 3
+           ELSE 4 END`,
+        [plan.id]
+      )
+    }
 
     return NextResponse.json({
       id: plan.id,
