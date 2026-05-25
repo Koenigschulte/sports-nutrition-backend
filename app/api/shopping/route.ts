@@ -357,9 +357,6 @@ export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
     const byCategory: Record<string, ShoppingItem[]> = {}
 
     for (const acc of Object.values(accum)) {
-      // Vorrat ohne Mengenangabe → Haushaltsstandardartikel, nicht kaufen
-      if (acc.cat === 'Vorrat' && acc.amounts.length === 0) continue
-
       const item: ShoppingItem = {
         name: acc.name,
         amount: formatAmount(acc.amounts),
