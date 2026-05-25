@@ -8,46 +8,68 @@ interface ShoppingItem {
   category: string
 }
 
-const CATEGORIES: Record<string, string> = {
+// Kategorisierung — Schlüsselwörter im Zutaten-Namen
+const CATEGORIES: [RegExp, string][] = [
   // Fleisch & Fisch
-  hähnchen: 'Fleisch & Fisch', hühnchen: 'Fleisch & Fisch', huhn: 'Fleisch & Fisch',
-  rindfleisch: 'Fleisch & Fisch', lachs: 'Fleisch & Fisch', thunfisch: 'Fleisch & Fisch',
-  fisch: 'Fleisch & Fisch', fleisch: 'Fleisch & Fisch', turkey: 'Fleisch & Fisch',
-  // Milchprodukte & Eier
-  milch: 'Milch & Eier', joghurt: 'Milch & Eier', quark: 'Milch & Eier',
-  käse: 'Milch & Eier', ei: 'Milch & Eier', eier: 'Milch & Eier', butter: 'Milch & Eier',
+  [/h[äa]hnchen|h[üu]hnchen|h[üu]hn\b|pute[n]?|rind(er)?|hack|steak|schnitzel|lachs|thunfisch|fisch|garnelen|salami|wurst|speck/i, 'Fleisch & Fisch'],
+  // Milch & Eier
+  [/\beier?\b|milch|joghurt|quark|käse|mozzarella|butter|sahne|frischkäse|skyr|hüttenkäse/i, 'Milch & Eier'],
   // Gemüse
-  tomate: 'Gemüse', salat: 'Gemüse', spinat: 'Gemüse', brokkoli: 'Gemüse',
-  karotte: 'Gemüse', paprika: 'Gemüse', zwiebel: 'Gemüse', knoblauch: 'Gemüse',
-  zucchini: 'Gemüse', gurke: 'Gemüse', avocado: 'Gemüse', süßkartoffel: 'Gemüse',
+  [/tomate|paprika|spinat|brokkoli|karotte|möhre|zwiebel|knoblauch|zucchini|gurke|avocado|süßkartoffel|salat|feldsalat|rucola|blumenkohl|lauch|sellerie|fenchel|erbsen|mais/i, 'Gemüse'],
   // Obst
-  banane: 'Obst', apfel: 'Obst', beeren: 'Obst', orange: 'Obst', zitrone: 'Obst',
+  [/banane|apfel|beere[n]?|orange|zitrone|mango|traube[n]?|erdbeere[n]?|heidelbeere[n]?|himbeere[n]?|kiwi|ananas/i, 'Obst'],
   // Getreide & Kohlenhydrate
-  reis: 'Getreide & Kohlenhydrate', nudeln: 'Getreide & Kohlenhydrate', pasta: 'Getreide & Kohlenhydrate',
-  brot: 'Getreide & Kohlenhydrate', hafer: 'Getreide & Kohlenhydrate', quinoa: 'Getreide & Kohlenhydrate',
-  kartoffel: 'Getreide & Kohlenhydrate',
-  // Hülsenfrüchte
-  linsen: 'Hülsenfrüchte', bohnen: 'Hülsenfrüchte', kichererbsen: 'Hülsenfrüchte', tofu: 'Hülsenfrüchte',
-  // Öle & Würzen
-  olivenöl: 'Öle & Gewürze', öl: 'Öle & Gewürze', salz: 'Öle & Gewürze', pfeffer: 'Öle & Gewürze',
+  [/reis|nudel|pasta|brot|hafer|quinoa|kartoffel|couscous|bulgur|dinkel|mehl|tortilla|wrap|bagel/i, 'Getreide & Kohlenhydrate'],
+  // Hülsenfrüchte & Proteine
+  [/linsen|bohnen|kichererbsen|tofu|tempeh|edamame/i, 'Hülsenfrüchte'],
+  // Nüsse & Samen
+  [/mandel[n]?|nuss|nüsse|walnuss|cashew|erdnuss|sonnenblumenkern|kürbiskern|sesam|leinsamen|chiasamen/i, 'Nüsse & Samen'],
+  // Vorrat — Dinge die man meist zuhause hat
+  [/salz|pfeffer|paprikapulver|kurkuma|zimt|oregano|basilikum|thymian|rosmarin|kümmel|muskat|currypulver|knoblauchpulver|zwiebelpulver|chilipulver|chili|gewürz|olivenöl|sonnenblumenöl|rapsöl|\böl\b|essig|sojasoße|senf|honig|ahornsirup|tomatenmark|brühe|bouillon/i, 'Vorrat'],
+]
+
+function categorize(ingredient: string): string {
+  for (const [pattern, category] of CATEGORIES) {
+    if (pattern.test(ingredient)) return category
+  }
+  return 'Sonstiges'
 }
 
-// Normalisiert Zutatennamen auf Standardform — fasst Varianten zusammen
+// Bruchzahlen und Adjektive normalisieren
+function preprocessRaw(raw: string): string {
+  return raw
+    .replace(/½/g, '0.5')
+    .replace(/¼/g, '0.25')
+    .replace(/¾/g, '0.75')
+    .replace(/⅓/g, '0.33')
+    .replace(/⅔/g, '0.67')
+    // "2 große Eier" → "2 Eier" (Adjektiv zwischen Zahl und Name entfernen)
+    .replace(/^(\d+(?:[.,]\d+)?)\s+(große?[s]?|kleine?[s]?|frische?[s]?|reife?[s]?|gehackte?[s]?|geriebene?[s]?)\s+/i, '$1 ')
+}
+
+// Varianten-Normalisierung auf Standardnamen
 const INGREDIENT_ALIASES: [RegExp, string][] = [
-  [/h[äa]hnchen(brust)?filet|h[äa]hnchenbrust|h[üu]hnerbrust|gebraten(e[s]?)?\s+h[äa]hnchen|gekocht(e[s]?)?\s+h[äa]hnchen/i, 'Hähnchenbrustfilet'],
-  [/putenbrust(filet)?|putenfilet/i, 'Putenbrustfilet'],
-  [/rinderhack|hackfleisch.*rind|rind.*hack/i, 'Rinderhackfleisch'],
+  [/h[äa]hnchen(brust)?filet|h[äa]hnchenbrust|h[üu]hnerbrust|gebraten(e[s]?)?\s+h[äa]hnchen|gekocht(e[s]?)?\s+h[äa]hnchen|h[äa]hnchen\b/i, 'Hähnchenbrustfilet'],
+  [/putenbrust(filet)?|putenfilet|pute\b/i, 'Putenbrustfilet'],
+  [/rinderhack|hackfleisch.*rind|rind.*hack|hackfleisch/i, 'Rinderhackfleisch'],
   [/lachsfilet|lachs\b/i, 'Lachsfilet'],
   [/thunfisch(dose)?/i, 'Thunfisch (Dose)'],
   [/vollkornbrot|vollkorn.*brot/i, 'Vollkornbrot'],
   [/vollkornnudeln|vollkorn.*nudeln|vollkorn.*pasta/i, 'Vollkornnudeln'],
-  [/basmati.*reis|jasmin.*reis|langkorn.*reis/i, 'Reis'],
+  [/basmati.*reis|jasmin.*reis|langkorn.*reis|vollkorn.*reis/i, 'Reis'],
+  [/\breis\b/i, 'Reis'],
   [/magerquark|quark.*mager/i, 'Magerquark'],
-  [/griechisch.*joghurt|joghurt.*griechisch/i, 'Griechischer Joghurt'],
+  [/griechisch.*joghurt|joghurt.*griechisch/i, 'Griechischer Joghurt (0%/2%)'],
+  [/\bjoghurt\b/i, 'Joghurt'],
   [/olivenöl\b/i, 'Olivenöl'],
-  [/knoblauchzehe[n]?|knoblauch\b/i, 'Knoblauch'],
+  [/knoblauchzehe[n]?/i, 'Knoblauch'],
   [/kirschtomaten|cocktailtomaten/i, 'Kirschtomaten'],
+  [/\btomate[n]?\b/i, 'Tomaten'],
   [/süßkartoffel[n]?/i, 'Süßkartoffel'],
+  [/\beier?\b|hühnereier/i, 'Eier'],
+  [/rote?\s+paprika|paprikaschote/i, 'Paprika (rot)'],
+  [/gelbe?\s+paprika/i, 'Paprika (gelb)'],
+  [/\bpaprika\b(?!\s*pulver|\s*gewürz)/i, 'Paprika'],
 ]
 
 function normalizeIngredientName(name: string): string {
@@ -55,17 +77,9 @@ function normalizeIngredientName(name: string): string {
   for (const [pattern, standard] of INGREDIENT_ALIASES) {
     if (pattern.test(trimmed)) return standard
   }
-  // Zubereitungsform am Anfang entfernen: "gekochte X" → "X", "gebratenes X" → "X"
-  const prepRemoved = trimmed.replace(/^(gekocht[e]?[s]?|gebraten[e]?[s]?|gedünstet[e]?[s]?|gebacken[e]?[s]?|frisch[e]?[s]?)\s+/i, '')
+  // Zubereitungsform am Anfang entfernen
+  const prepRemoved = trimmed.replace(/^(gekocht[e]?[s]?|gebraten[e]?[s]?|gedünstet[e]?[s]?|gebacken[e]?[s]?|frisch[e]?[s]?|gehackt[e]?[s]?|gerieben[e]?[s]?)\s+/i, '')
   return prepRemoved.charAt(0).toUpperCase() + prepRemoved.slice(1)
-}
-
-function categorize(ingredient: string): string {
-  const lower = ingredient.toLowerCase()
-  for (const [keyword, category] of Object.entries(CATEGORIES)) {
-    if (lower.includes(keyword)) return category
-  }
-  return 'Sonstiges'
 }
 
 interface ParsedAmount {
@@ -74,14 +88,23 @@ interface ParsedAmount {
 }
 
 function parseIngredient(raw: string): { name: string; amount: string; parsedAmount: ParsedAmount | null } {
-  const match = raw.match(/^(\d+(?:[.,]\d+)?)\s*(g|kg|ml|l|EL|TL|Stück|Pck|Dose|Tasse|Bund)\.?\s+(.+)$/i)
+  const cleaned = preprocessRaw(raw)
+  // Mit Einheit: "200g Hähnchen", "2 EL Olivenöl", "1 Stück Paprika"
+  const match = cleaned.match(/^(\d+(?:[.,]\d+)?)\s*(g|kg|ml|l|EL|TL|Stück|Pck\.?|Dose[n]?|Tasse[n]?|Bund|Scheibe[n]?|Zehe[n]?)\.?\s+(.+)$/i)
   if (match) {
     const value = parseFloat(match[1].replace(',', '.'))
-    const unit = match[2].toLowerCase()
+    const unit = match[2].replace(/\.$/,'').toLowerCase()
     const name = normalizeIngredientName(match[3].trim())
-    return { name, amount: match[0].trim(), parsedAmount: { value, unit } }
+    return { name, amount: `${match[1]}${match[2]} ${name}`, parsedAmount: { value, unit } }
   }
-  return { amount: '', name: normalizeIngredientName(raw.trim()), parsedAmount: null }
+  // Nur Zahl ohne Einheit: "2 Eier", "3 Bananen" → Einheit = "stück"
+  const countMatch = cleaned.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/)
+  if (countMatch) {
+    const value = parseFloat(countMatch[1].replace(',', '.'))
+    const name = normalizeIngredientName(countMatch[2].trim())
+    return { name, amount: `${countMatch[1]} ${name}`, parsedAmount: { value, unit: 'stück' } }
+  }
+  return { amount: '', name: normalizeIngredientName(cleaned.trim()), parsedAmount: null }
 }
 
 function formatAmounts(amounts: ParsedAmount[], rawAmounts: string[]): string {
@@ -98,6 +121,7 @@ function formatAmounts(amounts: ParsedAmount[], rawAmounts: string[]): string {
   const parts = Object.entries(byUnit).map(([unit, total]) => {
     if (unit === 'g' && total >= 1000) return `${+(total / 1000).toFixed(1)}kg`
     if (unit === 'ml' && total >= 1000) return `${+(total / 1000).toFixed(1)}l`
+    if (unit === 'stück') return `${Math.round(total)} Stück`
     return `${Math.round(total)}${unit}`
   })
   return [...parts, ...rawAmounts].join(' + ')
@@ -124,7 +148,6 @@ export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
       [planId]
     )
 
-    // Collect all ingredients
     const allIngredients: { name: string; amount: string; parsedAmount: ParsedAmount | null; category: string }[] = []
 
     for (const meal of mealsRes.rows) {
@@ -136,7 +159,7 @@ export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
       }
     }
 
-    // Consolidate duplicates by name — aggregate amounts numerically
+    // Zusammenzählen nach normalisiertem Namen
     const accum: Record<string, { name: string; category: string; amounts: ParsedAmount[]; rawAmounts: string[] }> = {}
     for (const item of allIngredients) {
       const key = item.name.toLowerCase().trim()
@@ -161,15 +184,25 @@ export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
       }
     }
 
-    // Group by category
+    // Nach Kategorie gruppieren
     const byCategory: Record<string, ShoppingItem[]> = {}
     for (const item of Object.values(consolidated)) {
       if (!byCategory[item.category]) byCategory[item.category] = []
       byCategory[item.category].push(item)
     }
 
-    // Sort categories
-    const categoryOrder = ['Fleisch & Fisch', 'Milch & Eier', 'Gemüse', 'Obst', 'Getreide & Kohlenhydrate', 'Hülsenfrüchte', 'Öle & Gewürze', 'Sonstiges']
+    // Kategorie-Reihenfolge
+    const categoryOrder = [
+      'Fleisch & Fisch',
+      'Milch & Eier',
+      'Gemüse',
+      'Obst',
+      'Getreide & Kohlenhydrate',
+      'Hülsenfrüchte',
+      'Nüsse & Samen',
+      'Vorrat',
+      'Sonstiges',
+    ]
     const sorted: Record<string, ShoppingItem[]> = {}
     for (const cat of categoryOrder) {
       if (byCategory[cat]) sorted[cat] = byCategory[cat].sort((a, b) => a.name.localeCompare(b.name))
