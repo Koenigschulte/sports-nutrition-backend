@@ -15,6 +15,20 @@ function currentMondayStr(): string {
   return `${y}-${m}-${d}`
 }
 
+export const DELETE = requireAuth(async (_req: NextRequest, userId: string) => {
+  const client = await pool.connect()
+  try {
+    const weekStart = currentMondayStr()
+    await client.query(
+      `DELETE FROM weekly_plans WHERE user_id = $1 AND week_start = $2`,
+      [userId, weekStart]
+    )
+    return NextResponse.json({ deleted: true })
+  } finally {
+    client.release()
+  }
+})
+
 export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
   const client = await pool.connect()
   try {
