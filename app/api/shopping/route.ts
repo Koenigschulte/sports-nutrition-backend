@@ -88,7 +88,7 @@ const ALIASES: [RegExp, string][] = [
   [/\böl\b/i, 'Öl'],
   [/sojasoße|sojasauce/i, 'Sojasoße'],
   [/tomatenmark/i, 'Tomatenmark'],
-  [/passierte\s*tomaten/i, 'Passierte Tomaten'],
+  [/passierte?\s*tomaten|passiertomaten|passata/i, 'Passierte Tomaten'],
   [/gemüsebrühe|hühnerbrühe|rinderbrühe|brühe\b|bouillon/i, 'Gemüsebrühe'],
   [/kokosmilch/i, 'Kokosmilch (Dose)'],
   // Gemüse
@@ -122,6 +122,14 @@ const ALIASES: [RegExp, string][] = [
   [/\bkiwi[s]?\b/i, 'Kiwi'],
   [/\btraube[n]?\b/i, 'Trauben'],
   [/\bmango[s]?\b/i, 'Mango'],
+  // Supplements / Sonstiges
+  [/proteinpulver|eiweißpulver/i, 'Proteinpulver'],
+  [/molkenprotein|whey.*protein|whey\b/i, 'Molkenprotein (Whey)'],
+  // Kräuter (Alias verhindert Stray-Paren-Problem bei "Koriander (frisch)" etc.)
+  [/\bkoriander\b/i, 'Koriander'],
+  [/\bpetersilie\b/i, 'Petersilie'],
+  [/\bschnittlauch\b/i, 'Schnittlauch'],
+  [/\bdill\b/i, 'Dill'],
   // Nüsse
   [/mandel[n]?/i, 'Mandeln'],
   [/walnuss|walnüsse/i, 'Walnüsse'],
@@ -138,11 +146,24 @@ const ALIASES: [RegExp, string][] = [
 function normalize(raw: string): string {
   let s = raw.trim()
 
+  // 0a. "Gewürze (Currypulver)" → "Currypulver" | "Gewürze Currypulver" → "Currypulver"
+  //     Gemini schreibt manchmal Kategorie als Prefix
+  s = s.replace(/^gewürze?\s*\(([^)]+)\)\s*$/i, '$1').trim()
+  s = s.replace(/^gewürze[s]?\s+/i, '').trim()
+
+  // 0b. "frische Kräuter (Petersilie)" → "Petersilie"
+  //     Gemini schreibt manchmal Oberbegriff + eigentliche Zutat in Klammern
+  const kraeuter = s.match(/^frische?\s+kräuter\s*\(([^)]+)\)/i)
+  if (kraeuter) s = kraeuter[1].trim()
+
+  // 0c. "(oder X)" / "(oder alternativ X)" entfernen: "Chilipulver (oder Paprikapulver)" → "Chilipulver"
+  s = s.replace(/\s*\(oder[^)]*\)/gi, '')
+
   // 1. "zum Braten", "für die Pfanne", "zum Anbraten" etc. entfernen
   s = s.replace(/\s*(zum\s+(braten|anbraten|kochen|dünsten|dämpfen|schmoren|frittieren)|für\s+die\s+pfanne|zum\s+beträufeln)\b.*/gi, '')
 
-  // 2. Qualifizierende Klammerausdrücke: "(nach Bedarf)", "(optional)", etc.
-  s = s.replace(/\s*\((nach\s+\w+(\s+\w+)?|optional|nach\s+belieben|zum\s+\w+|frisch\s+\w+|getrocknet|tiefgekühlt|aufgetaut|light|mager|fettarm|magerstufe)\)/gi, '')
+  // 2. Qualifizierende Klammerausdrücke: "(nach Bedarf)", "(optional)", "(400g)" etc.
+  s = s.replace(/\s*\((nach\s+\w+(\s+\w+)?|optional|nach\s+belieben|zum\s+\w+|frisch\s+\w+|getrocknet|tiefgekühlt|aufgetaut|light|mager|fettarm|magerstufe|\d+\s*g|\d+\s*ml)\)/gi, '')
 
   // 3. Qualifier ohne Klammern
   s = s.replace(/\s*(nach geschmack|nach belieben|zum abschmecken|optional|nach bedarf|zum würzen|frisch gemahlen|frisch gepresst|nach wunsch|zum garnieren)\b/gi, '')
@@ -155,16 +176,25 @@ function normalize(raw: string): string {
 
   s = s.replace(/\s+/g, ' ').trim()
 
-  // 6. Alias-Lookup
+  // 6. Alias-Lookup (gibt früh zurück → Schritte 7+8 werden übersprungen)
   for (const [re, std] of ALIASES) {
     if (re.test(s)) return std
   }
 
-  // 7. Rein beschreibende Klammern entfernen: "(schwarz)", "(weiß)", "(grob)" etc.
-  s = s.replace(/\s*\((schwarz|weiß|rot|grün|gelb|hell|dunkel|grob|fein|frisch|ganz|gemahlen|geröstet|roh|natur|bio)\)/gi, '').trim()
+  // 7. Beschreibende Klammern entfernen: "(frisch)", "(bio)", "(geschmacksneutral)" etc.
+  s = s.replace(/\s*\((schwarz|weiß|rot|grün|gelb|hell|dunkel|grob|fein|frisch|ganz|gemahlen|geröstet|roh|natur|bio|geschmacksneutral|neutral|vegan|laktosefrei|mager|light)\)/gi, '').trim()
 
-  // 8. Verwaiste Klammern entfernen: "Basilikum)" → "Basilikum"
-  s = s.replace(/\s*\)\s*$/, '').replace(/^\s*\(\s*/, '').trim()
+  // 8. Nur echte verwaiste (ungematchte) Klammern entfernen
+  //    "Basilikum)" → "Basilikum"  ABER  "Foo (Bar)" bleibt unberührt
+  const opens = (s.match(/\(/g) ?? []).length
+  const closes = (s.match(/\)/g) ?? []).length
+  if (closes > opens) s = s.replace(/\s*\)\s*$/, '').trim()
+  if (opens > closes) {
+    // Führende verwaiste Klammer
+    s = s.replace(/^\s*\(\s*/, '').trim()
+    // Ungeschlossene Klammer am Ende: "Foo (bar" → "Foo"
+    s = s.replace(/\s*\([^)]*$/, '').trim()
+  }
 
   if (!s) return ''
   return s.charAt(0).toUpperCase() + s.slice(1)
@@ -293,7 +323,11 @@ function parseOne(raw: string): { name: string; amount: Amount | null } {
 
   // Kein Maß
   const name = normalize(s.trim())
-  return { name, amount: null }
+  if (!name) return { name: '', amount: null }
+  // Blattgemüse / frische Kräuter ohne Mengenangabe → 1 Bund als Standardmenge
+  const bareKey = name.toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-zäöüß]/g, '')
+  const defAmount = BUND_ITEMS.has(bareKey) ? { value: 1, unit: 'bund' } : null
+  return { name, amount: defAmount }
 }
 
 // ─── Mengen formatieren ───────────────────────────────────────────────────────
@@ -392,9 +426,9 @@ export const GET = requireAuth(async (_req: NextRequest, userId: string) => {
       'Getreide & Kohlenhydrate',
       'Hülsenfrüchte',
       'Nüsse & Samen',
+      'Sonstiges',
       'Gewürze & Kräuter',
       'Vorrat',
-      'Sonstiges',
     ]
     const sorted: Record<string, ShoppingItem[]> = {}
     for (const cat of order) {
