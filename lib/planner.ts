@@ -123,6 +123,7 @@ ZUTATEN-FORMAT — STRIKT EINHALTEN:
 - Fleisch/Fisch/Getreide/Milch immer in g: "200g Hähnchenbrustfilet", "100g Haferflocken"
 - Obst/Gemüse zählbar in Stück: "1 Avocado", "2 Tomaten", "1 Paprika"
 - Immer Rohform: "Hähnchenbrustfilet" NICHT "gebratenes Hähnchen"
+- Zutatennamen NUR als Produktname — NIEMALS Zubereitungsform anhängen: RICHTIG: "100g Feta", "50g Parmesan", "200g Hähnchenbrustfilet" — FALSCH: "100g Feta zerbröselt", "50g Parmesan gerieben", "200g Hähnchen gewürfelt"
 - Einheitliche Namen: immer gleich schreiben — "Hähnchenbrustfilet" nie "Hähnchenbrust" oder "Hühnerbrust"
 - Gewürze die JEDER zuhause hat (Salz, Pfeffer, Öl) dürfen weggelassen werden oder nur einmal pro Woche auflisten
 - KEIN "nach Geschmack", KEIN "nach Belieben", KEIN "optional" in Zutaten
@@ -297,13 +298,15 @@ ANFORDERUNGEN:
 ${isTogo ? '- Muss ohne Herd zubereitet werden können (To-Go)' : ''}
 ${dislikes.length > 0 ? `- NIEMALS verwenden: ${dislikes.join(', ')}` : ''}
 - NICHT dasselbe Gericht wie "${currentTitle}" vorschlagen
+- Zutatennamen NUR als Produktname ohne Zubereitungsform: "100g Feta" nicht "100g Feta zerbröselt"
+- Jede Zutat als eigener Array-Eintrag, Format: "MengeEinheit Name"
 
 Antworte NUR mit validem JSON, kein Text davor oder danach:
 
 {
   "title": "Name des Gerichts",
   "prepMinutes": 20,
-  "ingredients": ["200g Zutate", "..."],
+  "ingredients": ["200g Zutat", "..."],
   "instructions": "Kurze Zubereitung in 2-4 Sätzen.",
   "nutrients": { "calories": ${targetCalories}, "protein": ${targetProteinG}, "carbs": 50, "fat": 15 }
 }`

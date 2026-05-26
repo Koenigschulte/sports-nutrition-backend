@@ -176,6 +176,10 @@ function normalize(raw: string): string {
 
   s = s.replace(/\s+/g, ' ').trim()
 
+  // 5b. Zubereitungs-Suffix am Ende entfernen: "Parmesan gerieben" → "Parmesan"
+  //     Trifft auch: "Feta zerbröselt", "Tomaten gehackt", "Zwiebeln fein gewürfelt" etc.
+  s = s.replace(/,?\s+(gerieben|zerbröselt|gehackt|gewürfelt|geschnitten|geviertelt|gepresst|geschält|entkernt|filetiert|mariniert|eingeweicht|aufgetaut|püriert|püree|gewaschen|gegart|gedünstet|klein\s+gehackt|fein\s+gehackt|grob\s+gehackt|klein\s+gewürfelt|fein\s+gewürfelt|grob\s+gewürfelt|in\s+scheiben|in\s+würfel|in\s+streifen|in\s+stücke)\b.*$/gi, '').trim()
+
   // 6. Alias-Lookup (gibt früh zurück → Schritte 7+8 werden übersprungen)
   for (const [re, std] of ALIASES) {
     if (re.test(s)) return std
