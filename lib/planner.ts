@@ -101,7 +101,7 @@ NUTZERPROFIL:
 - Haushaltsgröße: ${user.householdSize} Person(en)
 - Tagesbedarf Basis: ~${dailyCaloriesBase} kcal
 ${likes.length > 0 ? `- Mag gerne: ${likes.join(', ')}` : ''}
-${dislikes.length > 0 ? `- Mag NICHT / verträgt nicht: ${dislikes.join(', ')} — diese NIEMALS einplanen` : ''}
+${dislikes.length > 0 ? `- Mag NICHT / verträgt nicht: ${dislikes.join(', ')} — diese NIEMALS einplanen (Oberbegriffe gelten für alle Varianten: "Fisch" = Lachs, Thunfisch, Forelle, Hering usw.; "Fleisch" = Rind, Schwein, Geflügel usw.; "Nüsse" = alle Nusssorten; "Hülsenfrüchte" = Linsen, Bohnen, Kichererbsen usw.; "Milchprodukte" = Käse, Joghurt, Quark usw.)` : ''}
 
 TRAININGSWOCHE (${forecast.weeklyLoadLevel}) — Wochenstart: ${firstDay.date}:
 ${dayDescriptions}
@@ -296,7 +296,7 @@ ANFORDERUNGEN:
 - Kalorien: ~${targetCalories} kcal
 - Protein: mind. ${targetProteinG}g
 ${isTogo ? '- Muss ohne Herd zubereitet werden können (To-Go)' : ''}
-${dislikes.length > 0 ? `- NIEMALS verwenden: ${dislikes.join(', ')}` : ''}
+${dislikes.length > 0 ? `- NIEMALS verwenden: ${dislikes.join(', ')} (Oberbegriffe gelten für alle Varianten: "Fisch" = alle Fischarten, "Fleisch" = alle Fleischarten, "Nüsse" = alle Nusssorten, "Milchprodukte" = Käse, Joghurt, Quark usw.)` : ''}
 - NICHT dasselbe Gericht wie "${currentTitle}" vorschlagen
 - Zutatennamen NUR als Produktname ohne Zubereitungsform: "100g Feta" nicht "100g Feta zerbröselt"
 - Jede Zutat als eigener Array-Eintrag, Format: "MengeEinheit Name"
