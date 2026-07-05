@@ -14,7 +14,7 @@
 - **Deploy-UUID (Coolify, Backend):** `g63a8gexq0u68lk9j04v4ffa`
 - **Deploy:** `sudo /usr/local/bin/ops-deploy-nutrition` via SSH als `claude-ops`
 - **Frontend:** separates Repo `sports-nutrition-app` (SPA, nginx:alpine via Coolify), Branch `master`
-- **Datenbank:** Hetzner PostgreSQL (Container `pp8k3d59ezxug7o5v34zokby`)
+- **Datenbank:** Hetzner PostgreSQL (dedizierter Server `postgres-standalone`, Private IP `172.20.0.3`, seit 05.07.2026 — vorher Coolify-Container `pp8k3d59ezxug7o5v34zokby`)
 - **Monitoring:** Better Stack Monitor 4458032 → `/api/health`, Watchdog (`watchdog.py`) + `server-alert.py` auf dem Server
 
 ### ⚠️ WICHTIG — Credential-Vorfall (03.07.2026)
