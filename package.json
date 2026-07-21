@@ -14,7 +14,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.20.0",
-    "axios": "^1.16.0",
+    "axios": "^1.18.0",
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.3",
     "next": "^16.2.10",
