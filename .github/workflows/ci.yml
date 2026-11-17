@@ -1,0 +1,31 @@
+# Build-Prüfung für jeden PR und jeden Stand auf master (angelegt 17.11.2026).
+# Der Job-Name "build" wird vom Server-Auto-Deploy (ops-report.py autodeploy) abgefragt — nicht umbenennen.
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      # Platzhalter nur für Build/prisma generate — keine echte Datenbank, kein Geheimnis
+      DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci --include=dev
+      - run: npm run build
+      - name: Keine kritischen Lücken in Laufzeit-Paketen
+        run: npm audit --omit=dev --audit-level=critical
